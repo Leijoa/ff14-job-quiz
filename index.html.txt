@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF14 全職業圖示大會考 | 雷爪獅遊戲頻道</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent-color: #d4af37; /* 艾歐澤亞金 */
+            --correct: #2e7d32;
+            --wrong: #c62828;
+            --btn-bg: #333333;
+            --btn-hover: #444444;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Heiti TC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            background: var(--card-bg);
+            padding: 30px 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+
+        /* 遊戲區域 */
+        #game-area, #end-screen { display: none; }
+        #start-screen { display: block; }
+
+        /* 圖示顯示框 */
+        .icon-wrapper {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 25px auto;
+            position: relative;
+            /* 增加一點發光效果，讓圖示更突出 */
+            filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.3));
+        }
+
+        .icon-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* 按鈕網格 */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        button {
+            background: var(--btn-bg);
+            color: var(--text-color);
+            border: 1px solid #444;
+            padding: 15px 5px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            /* 防止雙點擊放大 */
+            touch-action: manipulation; 
+        }
+
+        button:hover {
+            background: var(--btn-hover);
+            border-color: #666;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* 答題狀態樣式 */
+        button.correct {
+            background-color: var(--correct) !important;
+            border-color: var(--correct);
+            color: white;
+            font-weight: bold;
+        }
+
+        button.wrong {
+            background-color: var(--wrong) !important;
+            border-color: var(--wrong);
+            opacity: 0.5;
+        }
+
+        .big-btn {
+            background: var(--accent-color);
+            color: #000;
+            font-weight: bold;
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            border: none;
+        }
+        
+        .big-btn:hover { background: #f0c441; }
+
+        /* 狀態列 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #aaa;
+            background: #252525;
+            padding: 8px 15px;
+            border-radius: 50px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 0.75rem;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        /* RWD 微調 */
+        @media (max-width: 400px) {
+            h1 { font-size: 1.5rem; }
+            button { font-size: 0.9rem; padding: 12px 5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="start-screen">
+            <h1>FF14 全職業圖示特訓</h1>
+            <p class="subtitle">戰鬥．採集．生產．基礎職業</p>
+            <div style="margin: 20px 0; font-size: 0.9rem; color: #ccc; line-height: 1.6;">
+                <p>包含 7.0 最新職業與所有基礎職業。</p>
+                <p>共 10 題，你能拿下滿分嗎？</p>
+            </div>
+            <button class="big-btn" onclick="game.start()">開始挑戰</button>
+        </div>
+
+        <div id="game-area">
+            <div class="status-bar">
+                <span id="progress">題數: 1/10</span>
+                <span id="score">得分: 0</span>
+            </div>
+            
+            <div class="icon-wrapper">
+                <img id="question-icon" src="" alt="Job Icon" onerror="this.src='https://placehold.co/100x100?text=No+Img'">
+            </div>
+
+            <div class="options-grid" id="options-container">
+                </div>
+        </div>
+
+        <div id="end-screen">
+            <h1>挑戰結束</h1>
+            <h2 id="final-score" style="font-size: 2.5rem; margin: 20px 0; color: var(--accent-color);">0 / 10</h2>
+            <p id="comment" style="font-size: 1.1rem; margin-bottom: 30px;">載入評語...</p>
+            <button class="big-btn" onclick="game.start()">再次挑戰</button>
+        </div>
+
+        <div class="footer">
+            <p>Designed for LeijoaLion (雷爪獅)</p>
+            <p>© SQUARE ENIX CO., LTD. All Rights Reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        // FF14 完整職業資料庫 (繁體中文)
+        const fullJobsData = [
+            // --- 坦克 Tank ---
+            { id: 'PLD', name: '騎士', type: 'tank' },
+            { id: 'WAR', name: '戰士', type: 'tank' },
+            { id: 'DRK', name: '暗黑騎士', type: 'tank' },
+            { id: 'GNB', name: '絕槍戰士', type: 'tank' },
+            // --- 補師 Healer ---
+            { id: 'WHM', name: '白魔道士', type: 'healer' },
+            { id: 'SCH', name: '學者', type: 'healer' },
+            { id: 'AST', name: '占星術士', type: 'healer' },
+            { id: 'SGE', name: '賢者', type: 'healer' },
+            // --- 近戰 Melee ---
+            { id: 'MNK', name: '武僧', type: 'dps' },
+            { id: 'DRG', name: '龍騎士', type: 'dps' },
+            { id: 'NIN', name: '忍者', type: 'dps' },
+            { id: 'SAM', name: '武士', type: 'dps' },
+            { id: 'RPR', name: '奪魂者', type: 'dps' },
+            { id: 'VPR', name: '毒蛇劍士', type: 'dps' }, // 7.0
+            // --- 遠程物理 Phys Ranged ---
+            { id: 'BRD', name: '吟遊詩人', type: 'dps' },
+            { id: 'MCH', name: '機工士', type: 'dps' },
+            { id: 'DNC', name: '舞者', type: 'dps' },
+            // --- 遠程魔法 Magic Ranged ---
+            { id: 'BLM', name: '黑魔道士', type: 'dps' },
+            { id: 'SMN', name: '召喚師', type: 'dps' },
+            { id: 'RDM', name: '赤魔道士', type: 'dps' },
+            { id: 'PCT', name: '繪靈法師', type: 'dps' }, // 7.0
+            { id: 'BLU', name: '青魔道士', type: 'dps' },
+            // --- 基礎職業 Base Classes ---
+            { id: 'GLA', name: '劍術師', type: 'base' },
+            { id: 'MRD', name: '斧術師', type: 'base' },
+            { id: 'PGL', name: '格鬥家', type: 'base' },
+            { id: 'LNC', name: '槍術師', type: 'base' },
+            { id: 'ROG', name: '雙劍師', type: 'base' },
+            { id: 'ARC', name: '弓箭手', type: 'base' },
+            { id: 'THM', name: '咒術師', type: 'base' },
+            { id: 'ACN', name: '巴術師', type: 'base' },
+            { id: 'CNJ', name: '幻術師', type: 'base' },
+            // --- 能工巧匠 Crafters (DoH) ---
+            { id: 'CRP', name: '木工師', type: 'doh' },
+            { id: 'BSM', name: '鍛造師', type: 'doh' },
+            { id: 'ARM', name: '甲冑師', type: 'doh' },
+            { id: 'GSM', name: '金工師', type: 'doh' },
+            { id: 'LTW', name: '皮革師', type: 'doh' },
+            { id: 'WVR', name: '裁縫師', type: 'doh' },
+            { id: 'ALC', name: '鍊金術師', type: 'doh' },
+            { id: 'CUL', name: '烹調師', type: 'doh' },
+            // --- 大地使者 Gatherers (DoL) ---
+            { id: 'MIN', name: '採掘師', type: 'dol' },
+            { id: 'BTN', name: '園藝師', type: 'dol' },
+            { id: 'FSH', name: '漁師', type: 'dol' }
+        ];
+
+        // 遊戲邏輯控制器
+        const game = {
+            round: 0,
+            score: 0,
+            totalRounds: 10,
+            currentAnswer: null,
+            isLocked: false, // 防止重複點擊
+
+            // DOM 元素快取
+            el: {
+                start: document.getElementById('start-screen'),
+                game: document.getElementById('game-area'),
+                end: document.getElementById('end-screen'),
+                icon: document.getElementById('question-icon'),
+                options: document.getElementById('options-container'),
+                progress: document.getElementById('progress'),
+                score: document.getElementById('score'),
+                finalScore: document.getElementById('final-score'),
+                comment: document.getElementById('comment')
+            },
+
+            start: function() {
+                this.round = 0;
+                this.score = 0;
+                this.el.start.style.display = 'none';
+                this.el.end.style.display = 'none';
+                this.el.game.style.display = 'block';
+                this.nextRound();
+            },
+
+            nextRound: function() {
+                if (this.round >= this.totalRounds) {
+                    this.finish();
+                    return;
+                }
+
+                this.round++;
+                this.isLocked = false;
+                this.updateStats();
+
+                // 1. 隨機抽選一題
+                this.currentAnswer = fullJobsData[Math.floor(Math.random() * fullJobsData.length)];
+                
+                // 設定圖片路徑 (假設放在 icons 資料夾，且檔名為 ID.png)
+                this.el.icon.src = `icons/${this.currentAnswer.id}.png`;
+
+                // 2. 產生混淆選項
+                let options = [this.currentAnswer];
+                
+                // 嘗試加入同類型的混淆項 (讓難度變高)
+                // 例如：如果是採集，儘量找其他採集來混淆
+                const sameTypeJobs = fullJobsData.filter(j => j.type === this.currentAnswer.type && j.id !== this.currentAnswer.id);
+                const otherJobs = fullJobsData.filter(j => j.type !== this.currentAnswer.type);
+                
+                // 邏輯：優先從同類型抓 1-2 個，剩下隨機補
+                while (options.length < 4) {
+                    let pool = (options.length < 3 && sameTypeJobs.length > 0) ? sameTypeJobs : fullJobsData;
+                    let randomJob = pool[Math.floor(Math.random() * pool.length)];
+                    
+                    if (!options.find(o => o.id === randomJob.id)) {
+                        options.push(randomJob);
+                    }
+                }
+
+                // 3. 洗牌
+                options.sort(() => Math.random() - 0.5);
+
+                // 4. 渲染按鈕
+                this.el.options.innerHTML = '';
+                options.forEach(job => {
+                    const btn = document.createElement('button');
+                    btn.textContent = job.name;
+                    // 使用 closure 傳遞參數
+                    btn.onclick = (e) => this.check(job, e.target);
+                    this.el.options.appendChild(btn);
+                });
+            },
+
+            check: function(selectedJob, btnElement) {
+                if (this.isLocked) return;
+                this.isLocked = true; // 鎖定防止連點
+
+                const buttons = this.el.options.querySelectorAll('button');
+                const isCorrect = selectedJob.id === this.currentAnswer.id;
+
+                if (isCorrect) {
+                    btnElement.classList.add('correct');
+                    this.score++;
+                } else {
+                    btnElement.classList.add('wrong');
+                    // 標示正確答案給玩家看
+                    buttons.forEach(b => {
+                        if (b.textContent === this.currentAnswer.name) {
+                            b.classList.add('correct');
+                        }
+                    });
+                }
+
+                // 延遲進入下一題
+                setTimeout(() => {
+                    this.nextRound();
+                }, 1200); // 1.2秒讓玩家看清楚答案
+            },
+
+            updateStats: function() {
+                this.el.progress.textContent = `題數: ${this.round}/${this.totalRounds}`;
+                this.el.score.textContent = `得分: ${this.score}`;
+            },
+
+            finish: function() {
+                this.el.game.style.display = 'none';
+                this.el.end.style.display = 'block';
+                this.el.finalScore.textContent = `${this.score} / ${this.totalRounds}`;
+                
+                // 根據 ENTP 與玩家屬性客製化評語
+                let msg = "";
+                if (this.score === 10) {
+                    msg = "太神啦！你的靈魂水晶是不是全套齊全？";
+                } else if (this.score >= 8) {
+                    msg = "非常優秀！艾歐澤亞的百科全書就是你。";
+                } else if (this.score >= 5) {
+                    msg = "還不錯，但小心別把刻木匠認成木工喔！";
+                } else {
+                    msg = "看來你需要去死者宮殿特訓一下基礎職業了...";
+                }
+                this.el.comment.textContent = msg;
+            }
+        };
+    </script>
+</body>
+</html>
