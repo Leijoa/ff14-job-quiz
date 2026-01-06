@@ -8,7 +8,7 @@
         :root {
             --bg-color-start: #2d2d2d;
             --bg-color-end: #121212;
-            --card-bg: rgba(30, 30, 30, 0.95); /* 稍微透明一點 */
+            --card-bg: rgba(30, 30, 30, 0.95);
             --text-color: #e0e0e0;
             --accent-color: #d4af37; /* 艾歐澤亞金 */
             --correct: #4caf50;
@@ -19,7 +19,6 @@
 
         body {
             font-family: 'Microsoft JhengHei', 'Heiti TC', sans-serif;
-            /* 升級 1: 放射狀背景漸層 */
             background: radial-gradient(circle at center, var(--bg-color-start) 0%, var(--bg-color-end) 100%);
             color: var(--text-color);
             display: flex;
@@ -39,11 +38,9 @@
             background: var(--card-bg);
             padding: 30px 20px;
             border-radius: 16px;
-            /* 加強陰影深度 */
             box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             border: 1px solid #444;
-            backdrop-filter: blur(10px); /* 磨砂玻璃效果 (支援的瀏覽器) */
-            /* 升級 4: 淡入動畫 */
+            backdrop-filter: blur(10px);
             animation: fadeIn 0.5s ease-out;
         }
 
@@ -69,7 +66,6 @@
             height: 110px;
             margin: 0 auto 30px auto;
             position: relative;
-            /* 強化圖示發光感 */
             filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.5));
             transition: all 0.3s ease;
         }
@@ -94,7 +90,6 @@
             font-size: 1.05rem;
             border-radius: 8px;
             cursor: pointer;
-            /* 升級 2: 按鈕基礎質感與過渡 */
             transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
             font-family: inherit;
             touch-action: manipulation;
@@ -103,7 +98,6 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
 
-        /* 升級 2: 按鈕懸停發光效果 */
         button:hover {
             background: var(--btn-hover);
             border-color: var(--accent-color);
@@ -115,9 +109,7 @@
             transform: translateY(1px);
         }
 
-        /* --- 升級 3: 答題動態回饋 --- */
-
-        /* 答對：綠色閃爍 + 跳動 */
+        /* 答題動態回饋 */
         button.correct {
             background-color: var(--correct) !important;
             border-color: #66bb6a !important;
@@ -127,7 +119,6 @@
             animation: pulse-green 0.5s;
         }
 
-        /* 答錯：紅色閃爍 + 搖晃 */
         button.wrong {
             background-color: var(--wrong) !important;
             border-color: #ef5350 !important;
@@ -136,7 +127,6 @@
             animation: shake 0.5s;
         }
 
-        /* 動畫定義 */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -153,7 +143,6 @@
             10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); background-color: #d32f2f; }
             20%, 40%, 60%, 80% { transform: translateX(6px); }
         }
-        /* --------------------------- */
 
         .big-btn {
             background: linear-gradient(to bottom, #d4af37, #b4932a);
@@ -184,7 +173,6 @@
             border: 1px solid #333;
         }
 
-        /* 讓新題目出現時有淡入效果 */
         .fade-in-element {
             animation: fadeIn 0.4s ease-out;
         }
@@ -238,16 +226,58 @@
     </div>
 
     <script>
-        // FF14 完整職業資料庫 (繁體中文) - 資料保持不變
+        // FF14 完整職業資料庫 (社群慣用繁體中文版)
         const fullJobsData = [
-            { id: 'PLD', name: '騎士', type: 'tank' }, { id: 'WAR', name: '戰士', type: 'tank' }, { id: 'DRK', name: '暗黑騎士', type: 'tank' }, { id: 'GNB', name: '絕槍戰士', type: 'tank' },
-            { id: 'WHM', name: '白魔道士', type: 'healer' }, { id: 'SCH', name: '學者', type: 'healer' }, { id: 'AST', name: '占星術士', type: 'healer' }, { id: 'SGE', name: '賢者', type: 'healer' },
-            { id: 'MNK', name: '武僧', type: 'dps' }, { id: 'DRG', name: '龍騎士', type: 'dps' }, { id: 'NIN', name: '忍者', type: 'dps' }, { id: 'SAM', name: '武士', type: 'dps' }, { id: 'RPR', name: '釤鐮客', type: 'dps' }, { id: 'VPR', name: '蛇武', type: 'dps' },
-            { id: 'BRD', name: '吟遊詩人', type: 'dps' }, { id: 'MCH', name: '機工士', type: 'dps' }, { id: 'DNC', name: '舞者', type: 'dps' },
-            { id: 'BLM', name: '黑魔道士', type: 'dps' }, { id: 'SMN', name: '召喚師', type: 'dps' }, { id: 'RDM', name: '赤魔道士', type: 'dps' }, { id: 'PCT', name: '繪靈法師', type: 'dps' }, { id: 'BLU', name: '青魔道士', type: 'dps' },
-            { id: 'GLA', name: '劍術師', type: 'base' }, { id: 'MRD', name: '斧術師', type: 'base' }, { id: 'PGL', name: '格鬥家', type: 'base' }, { id: 'LNC', name: '槍術師', type: 'base' }, { id: 'ROG', name: '雙劍師', type: 'base' }, { id: 'ARC', name: '弓箭手', type: 'base' }, { id: 'THM', name: '咒術師', type: 'base' }, { id: 'ACN', name: '秘術師', type: 'base' }, { id: 'CNJ', name: '幻術師', type: 'base' },
-            { id: 'CRP', name: '刻木匠', type: 'doh' }, { id: 'BSM', name: '鍛鐵匠', type: 'doh' }, { id: 'ARM', name: '鑄甲匠', type: 'doh' }, { id: 'GSM', name: '雕金匠', type: 'doh' }, { id: 'LTW', name: '製革匠', type: 'doh' }, { id: 'WVR', name: '裁衣匠', type: 'doh' }, { id: 'ALC', name: '鍊金術士', type: 'doh' }, { id: 'CUL', name: '烹調師', type: 'doh' },
-            { id: 'MIN', name: '採礦工', type: 'dol' }, { id: 'BTN', name: '園藝工', type: 'dol' }, { id: 'FSH', name: '捕魚人', type: 'dol' }
+            // --- 坦克 Tank ---
+            { id: 'PLD', name: '騎士', type: 'tank' },
+            { id: 'WAR', name: '戰士', type: 'tank' },
+            { id: 'DRK', name: '暗黑騎士', type: 'tank' },
+            { id: 'GNB', name: '絕槍戰士', type: 'tank' },
+            // --- 補師 Healer ---
+            { id: 'WHM', name: '白魔道士', type: 'healer' },
+            { id: 'SCH', name: '學者', type: 'healer' },
+            { id: 'AST', name: '占星術士', type: 'healer' },
+            { id: 'SGE', name: '賢者', type: 'healer' },
+            // --- 近戰 Melee ---
+            { id: 'MNK', name: '武僧', type: 'dps' },
+            { id: 'DRG', name: '龍騎士', type: 'dps' },
+            { id: 'NIN', name: '忍者', type: 'dps' },
+            { id: 'SAM', name: '武士', type: 'dps' },
+            { id: 'RPR', name: '奪魂者', type: 'dps' },
+            { id: 'VPR', name: '毒蛇劍士', type: 'dps' }, // 7.0
+            // --- 遠程物理 Phys Ranged ---
+            { id: 'BRD', name: '吟遊詩人', type: 'dps' },
+            { id: 'MCH', name: '機工士', type: 'dps' },
+            { id: 'DNC', name: '舞者', type: 'dps' },
+            // --- 遠程魔法 Magic Ranged ---
+            { id: 'BLM', name: '黑魔道士', type: 'dps' },
+            { id: 'SMN', name: '召喚師', type: 'dps' },
+            { id: 'RDM', name: '赤魔道士', type: 'dps' },
+            { id: 'PCT', name: '繪靈法師', type: 'dps' }, // 7.0
+            { id: 'BLU', name: '青魔道士', type: 'dps' },
+            // --- 基礎職業 Base Classes ---
+            { id: 'GLA', name: '劍術師', type: 'base' },
+            { id: 'MRD', name: '斧術師', type: 'base' },
+            { id: 'PGL', name: '格鬥家', type: 'base' },
+            { id: 'LNC', name: '槍術師', type: 'base' },
+            { id: 'ROG', name: '雙劍師', type: 'base' },
+            { id: 'ARC', name: '弓箭手', type: 'base' },
+            { id: 'THM', name: '咒術師', type: 'base' },
+            { id: 'ACN', name: '巴術師', type: 'base' },
+            { id: 'CNJ', name: '幻術師', type: 'base' },
+            // --- 能工巧匠 Crafters (DoH) ---
+            { id: 'CRP', name: '木工師', type: 'doh' },
+            { id: 'BSM', name: '鍛造師', type: 'doh' },
+            { id: 'ARM', name: '甲冑師', type: 'doh' },
+            { id: 'GSM', name: '金工師', type: 'doh' },
+            { id: 'LTW', name: '皮革師', type: 'doh' },
+            { id: 'WVR', name: '裁縫師', type: 'doh' },
+            { id: 'ALC', name: '鍊金術師', type: 'doh' },
+            { id: 'CUL', name: '烹調師', type: 'doh' },
+            // --- 大地使者 Gatherers (DoL) ---
+            { id: 'MIN', name: '採掘師', type: 'dol' },
+            { id: 'BTN', name: '園藝師', type: 'dol' },
+            { id: 'FSH', name: '漁師', type: 'dol' }
         ];
 
         const game = {
@@ -262,7 +292,7 @@
                 game: document.getElementById('game-area'),
                 end: document.getElementById('end-screen'),
                 icon: document.getElementById('question-icon'),
-                iconContainer: document.getElementById('icon-container'), // 新增
+                iconContainer: document.getElementById('icon-container'),
                 options: document.getElementById('options-container'),
                 progress: document.getElementById('progress'),
                 score: document.getElementById('score'),
@@ -289,10 +319,10 @@
                 this.isLocked = false;
                 this.updateStats();
 
-                // 觸發淡入動畫：先移除再加入 class
+                // 觸發淡入動畫
                 this.el.iconContainer.classList.remove('fade-in-element');
                 this.el.options.classList.remove('fade-in-element');
-                void this.el.iconContainer.offsetWidth; // 強制瀏覽器重繪 (Magic Trick)
+                void this.el.iconContainer.offsetWidth; // 重繪
                 this.el.iconContainer.classList.add('fade-in-element');
                 this.el.options.classList.add('fade-in-element');
 
@@ -329,22 +359,18 @@
                 const isCorrect = selectedJob.id === this.currentAnswer.id;
 
                 if (isCorrect) {
-                    // 加入正確動畫 class
                     btnElement.classList.add('correct');
                     this.score++;
                 } else {
-                    // 加入錯誤動畫 class
                     btnElement.classList.add('wrong');
                     buttons.forEach(b => {
                         if (b.textContent === this.currentAnswer.name) {
-                            // 正確答案也要亮綠燈，但不跳動
                             b.classList.add('correct');
-                            b.style.animation = 'none'; // 取消跳動，只亮燈
+                            b.style.animation = 'none';
                         }
                     });
                 }
 
-                // 等待動畫結束後進入下一題 (1.3秒)
                 setTimeout(() => {
                     this.nextRound();
                 }, 1300);
@@ -363,7 +389,7 @@
                 let msg = "";
                 if (this.score === 10) msg = "太神啦！你的靈魂水晶是不是全套齊全？";
                 else if (this.score >= 8) msg = "非常優秀！艾歐澤亞的百科全書就是你。";
-                else if (this.score >= 5) msg = "還不錯，但小心別把刻木匠認成木工喔！";
+                else if (this.score >= 5) msg = "還不錯，但小心別把木工師認成鍛造師喔！";
                 else msg = "看來你需要去死者宮殿特訓一下基礎職業了...";
                 this.el.comment.textContent = msg;
             }
