@@ -29,7 +29,7 @@
             margin: 0;
             padding: 20px;
             box-sizing: border-box;
-            overflow: hidden; /* 防止浮動文字造成捲動條 */
+            overflow: hidden;
         }
 
         .container {
@@ -43,7 +43,7 @@
             border: 1px solid #444;
             backdrop-filter: blur(10px);
             animation: fadeIn 0.5s ease-out;
-            position: relative; /* 為了定位浮動文字 */
+            position: relative;
         }
 
         h1 {
@@ -70,6 +70,13 @@
             position: relative;
             filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.5));
             transition: all 0.3s ease;
+            /* 預設隱藏，載入完成後透過 class 顯示 */
+            opacity: 0; 
+        }
+
+        /* 圖片載入完成後的顯示狀態 */
+        .icon-wrapper.loaded {
+            opacity: 1;
         }
 
         .icon-wrapper img {
@@ -83,6 +90,13 @@
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             position: relative;
+            /* 預設隱藏，等圖片出來才出來 */
+            opacity: 0;
+            transition: opacity 0.2s ease-out;
+        }
+
+        .options-grid.visible {
+            opacity: 1;
         }
 
         button {
@@ -97,7 +111,7 @@
             font-family: inherit;
             touch-action: manipulation;
             position: relative;
-            overflow: visible; /* 讓浮動文字可以超出按鈕 */
+            overflow: visible;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
 
@@ -112,7 +126,6 @@
             transform: translateY(1px);
         }
 
-        /* 答對特效 */
         button.correct {
             background-color: var(--correct) !important;
             border-color: #66bb6a !important;
@@ -123,7 +136,6 @@
             z-index: 10;
         }
 
-        /* 答錯特效 */
         button.wrong {
             background-color: var(--wrong) !important;
             border-color: #ef5350 !important;
@@ -132,13 +144,12 @@
             animation: shake 0.5s;
         }
 
-        /* 浮動誇獎文字 CSS */
         .feedback-text {
             position: absolute;
             top: -20px;
             left: 50%;
             transform: translateX(-50%);
-            color: #ffd700; /* 金色 */
+            color: #ffd700;
             font-weight: 900;
             font-size: 1.4rem;
             white-space: nowrap;
@@ -183,12 +194,22 @@
             border-radius: 8px;
             font-size: 1.1rem;
             cursor: pointer;
+            transition: all 0.3s;
         }
         
         .big-btn:hover {
             background: linear-gradient(to bottom, #eac752, #c4a33a);
             box-shadow: 0 8px 20px rgba(212, 175, 55, 0.5);
             transform: translateY(-3px);
+        }
+
+        /* 載入狀態按鈕 */
+        .big-btn:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
         }
 
         .status-bar {
@@ -203,8 +224,10 @@
             border: 1px solid #333;
         }
 
-        .fade-in-element {
-            animation: fadeIn 0.4s ease-out;
+        .score-highlight {
+            color: var(--accent-color);
+            font-weight: bold;
+            transition: transform 0.2s;
         }
 
         .footer {
@@ -213,12 +236,22 @@
             color: #666;
             line-height: 1.6;
         }
-        
-        /* 分數高亮 */
-        .score-highlight {
-            color: var(--accent-color);
-            font-weight: bold;
-            transition: transform 0.2s;
+
+        /* 載入進度條 */
+        #loading-bar-container {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            margin-top: 10px;
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+        #loading-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--accent-color);
+            transition: width 0.3s;
         }
     </style>
 </head>
@@ -231,9 +264,15 @@
             <div style="margin: 30px 0; font-size: 1rem; color: #ccc; line-height: 1.8;">
                 <p>包含 7.0 最新職業與所有基礎職業。</p>
                 <p>共 10 題，滿分 100 分！</p>
-                <p style="color: var(--accent-color); font-weight: bold;">準備好接受挑戰了嗎？</p>
+                <p id="loading-text" style="font-size: 0.9rem; color: #888; margin-top: 10px;">
+                    正在讀取職業水晶...
+                </p>
+                <div id="loading-bar-container">
+                    <div id="loading-bar"></div>
+                </div>
             </div>
-            <button class="big-btn" onclick="game.start()">開始挑戰</button>
+            
+            <button id="start-btn" class="big-btn" onclick="game.start()" disabled>資料讀取中...</button>
         </div>
 
         <div id="game-area">
@@ -242,11 +281,11 @@
                 <span id="score" class="score-highlight">得分: 0</span>
             </div>
             
-            <div class="icon-wrapper fade-in-element" id="icon-container">
-                <img id="question-icon" src="" alt="Job Icon" onerror="this.src='https://placehold.co/100x100?text=No+Img'">
+            <div class="icon-wrapper" id="icon-container">
+                <img id="question-icon" src="" alt="Job Icon">
             </div>
 
-            <div class="options-grid fade-in-element" id="options-container">
+            <div class="options-grid" id="options-container">
                 </div>
         </div>
 
@@ -264,65 +303,76 @@
     </div>
 
     <script>
-        // FF14 完整職業資料庫 (社群慣用繁體中文版)
         const fullJobsData = [
             // --- 坦克 Tank ---
-            { id: 'PLD', name: '騎士', type: 'tank' },
-            { id: 'WAR', name: '戰士', type: 'tank' },
-            { id: 'DRK', name: '暗黑騎士', type: 'tank' },
-            { id: 'GNB', name: '絕槍戰士', type: 'tank' },
+            { id: 'PLD', name: '騎士', type: 'tank' }, { id: 'WAR', name: '戰士', type: 'tank' }, { id: 'DRK', name: '暗黑騎士', type: 'tank' }, { id: 'GNB', name: '絕槍戰士', type: 'tank' },
             // --- 補師 Healer ---
-            { id: 'WHM', name: '白魔道士', type: 'healer' },
-            { id: 'SCH', name: '學者', type: 'healer' },
-            { id: 'AST', name: '占星術士', type: 'healer' },
-            { id: 'SGE', name: '賢者', type: 'healer' },
+            { id: 'WHM', name: '白魔道士', type: 'healer' }, { id: 'SCH', name: '學者', type: 'healer' }, { id: 'AST', name: '占星術士', type: 'healer' }, { id: 'SGE', name: '賢者', type: 'healer' },
             // --- 近戰 Melee ---
-            { id: 'MNK', name: '武僧', type: 'dps' },
-            { id: 'DRG', name: '龍騎士', type: 'dps' },
-            { id: 'NIN', name: '忍者', type: 'dps' },
-            { id: 'SAM', name: '武士', type: 'dps' },
-            { id: 'RPR', name: '奪魂者', type: 'dps' },
-            { id: 'VPR', name: '毒蛇劍士', type: 'dps' },
+            { id: 'MNK', name: '武僧', type: 'dps' }, { id: 'DRG', name: '龍騎士', type: 'dps' }, { id: 'NIN', name: '忍者', type: 'dps' }, { id: 'SAM', name: '武士', type: 'dps' }, { id: 'RPR', name: '奪魂者', type: 'dps' }, { id: 'VPR', name: '毒蛇劍士', type: 'dps' },
             // --- 遠程物理 Phys Ranged ---
-            { id: 'BRD', name: '吟遊詩人', type: 'dps' },
-            { id: 'MCH', name: '機工士', type: 'dps' },
-            { id: 'DNC', name: '舞者', type: 'dps' },
+            { id: 'BRD', name: '吟遊詩人', type: 'dps' }, { id: 'MCH', name: '機工士', type: 'dps' }, { id: 'DNC', name: '舞者', type: 'dps' },
             // --- 遠程魔法 Magic Ranged ---
-            { id: 'BLM', name: '黑魔道士', type: 'dps' },
-            { id: 'SMN', name: '召喚師', type: 'dps' },
-            { id: 'RDM', name: '赤魔道士', type: 'dps' },
-            { id: 'PCT', name: '繪靈法師', type: 'dps' },
-            { id: 'BLU', name: '青魔道士', type: 'dps' },
+            { id: 'BLM', name: '黑魔道士', type: 'dps' }, { id: 'SMN', name: '召喚師', type: 'dps' }, { id: 'RDM', name: '赤魔道士', type: 'dps' }, { id: 'PCT', name: '繪靈法師', type: 'dps' }, { id: 'BLU', name: '青魔道士', type: 'dps' },
             // --- 基礎職業 Base Classes ---
-            { id: 'GLA', name: '劍術師', type: 'base' },
-            { id: 'MRD', name: '斧術師', type: 'base' },
-            { id: 'PGL', name: '格鬥家', type: 'base' },
-            { id: 'LNC', name: '槍術師', type: 'base' },
-            { id: 'ROG', name: '雙劍師', type: 'base' },
-            { id: 'ARC', name: '弓箭手', type: 'base' },
-            { id: 'THM', name: '咒術師', type: 'base' },
-            { id: 'ACN', name: '巴術師', type: 'base' },
-            { id: 'CNJ', name: '幻術師', type: 'base' },
+            { id: 'GLA', name: '劍術師', type: 'base' }, { id: 'MRD', name: '斧術師', type: 'base' }, { id: 'PGL', name: '格鬥家', type: 'base' }, { id: 'LNC', name: '槍術師', type: 'base' }, { id: 'ROG', name: '雙劍師', type: 'base' }, { id: 'ARC', name: '弓箭手', type: 'base' }, { id: 'THM', name: '咒術師', type: 'base' }, { id: 'ACN', name: '巴術師', type: 'base' }, { id: 'CNJ', name: '幻術師', type: 'base' },
             // --- 能工巧匠 Crafters (DoH) ---
-            { id: 'CRP', name: '木工師', type: 'doh' },
-            { id: 'BSM', name: '鍛造師', type: 'doh' },
-            { id: 'ARM', name: '甲冑師', type: 'doh' },
-            { id: 'GSM', name: '金工師', type: 'doh' },
-            { id: 'LTW', name: '皮革師', type: 'doh' },
-            { id: 'WVR', name: '裁縫師', type: 'doh' },
-            { id: 'ALC', name: '鍊金術師', type: 'doh' },
-            { id: 'CUL', name: '烹調師', type: 'doh' },
+            { id: 'CRP', name: '木工師', type: 'doh' }, { id: 'BSM', name: '鍛造師', type: 'doh' }, { id: 'ARM', name: '甲冑師', type: 'doh' }, { id: 'GSM', name: '金工師', type: 'doh' }, { id: 'LTW', name: '皮革師', type: 'doh' }, { id: 'WVR', name: '裁縫師', type: 'doh' }, { id: 'ALC', name: '鍊金術師', type: 'doh' }, { id: 'CUL', name: '烹調師', type: 'doh' },
             // --- 大地使者 Gatherers (DoL) ---
-            { id: 'MIN', name: '採掘師', type: 'dol' },
-            { id: 'BTN', name: '園藝師', type: 'dol' },
-            { id: 'FSH', name: '漁師', type: 'dol' }
+            { id: 'MIN', name: '採掘師', type: 'dol' }, { id: 'BTN', name: '園藝師', type: 'dol' }, { id: 'FSH', name: '漁師', type: 'dol' }
         ];
 
-        // 情緒價值語錄
-        const praiseWords = [
-            "完美！+10", "太強了！+10", "神操作！+10", "NICE！+10", 
-            "Exactly！+10", "帥啊！+10", "正確！+10", "好眼力！+10"
-        ];
+        const praiseWords = ["完美！+10", "太強了！+10", "神操作！+10", "NICE！+10", "Exactly！+10", "帥啊！+10", "正確！+10", "好眼力！+10"];
+
+        // --- 資源預先載入邏輯 ---
+        const assetLoader = {
+            total: fullJobsData.length,
+            loaded: 0,
+            images: {}, // 儲存預載好的圖片物件
+
+            init: function() {
+                const startBtn = document.getElementById('start-btn');
+                const loadingText = document.getElementById('loading-text');
+                const loadingBar = document.getElementById('loading-bar');
+                const loadingContainer = document.getElementById('loading-bar-container');
+
+                loadingContainer.style.display = 'block';
+
+                fullJobsData.forEach(job => {
+                    const img = new Image();
+                    img.src = `icons/${job.id}.png`;
+                    img.onload = () => {
+                        this.loaded++;
+                        this.updateProgress(loadingBar, loadingText, startBtn);
+                    };
+                    img.onerror = () => {
+                        // 即使失敗也算載入完成，避免卡住
+                        this.loaded++; 
+                        console.warn(`無法載入: ${job.id}`);
+                        this.updateProgress(loadingBar, loadingText, startBtn);
+                    };
+                    // 快取起來
+                    this.images[job.id] = img;
+                });
+            },
+
+            updateProgress: function(bar, text, btn) {
+                const percent = Math.floor((this.loaded / this.total) * 100);
+                bar.style.width = `${percent}%`;
+                
+                if (this.loaded >= this.total) {
+                    text.textContent = "準備完成！";
+                    text.style.color = "#4caf50";
+                    btn.textContent = "開始挑戰";
+                    btn.disabled = false;
+                    setTimeout(() => {
+                        document.getElementById('loading-bar-container').style.display = 'none';
+                    }, 500);
+                } else {
+                    text.textContent = `正在擦亮靈魂水晶... ${percent}%`;
+                }
+            }
+        };
 
         const game = {
             round: 0,
@@ -363,16 +413,36 @@
                 this.isLocked = false;
                 this.updateStats();
 
-                // 觸發淡入動畫
-                this.el.iconContainer.classList.remove('fade-in-element');
-                this.el.options.classList.remove('fade-in-element');
-                void this.el.iconContainer.offsetWidth; // 強制重繪
-                this.el.iconContainer.classList.add('fade-in-element');
-                this.el.options.classList.add('fade-in-element');
+                // 1. 先隱藏圖片和選項，準備轉場
+                this.el.iconContainer.classList.remove('loaded');
+                this.el.options.classList.remove('visible');
 
+                // 2. 準備下一題資料
                 this.currentAnswer = fullJobsData[Math.floor(Math.random() * fullJobsData.length)];
+                
+                // 3. 設定圖片路徑
                 this.el.icon.src = `icons/${this.currentAnswer.id}.png`;
 
+                // --- 關鍵優化：圖片載入完成偵測 ---
+                // 因為我們已經預載過，這裡通常會是瞬間完成（從快取讀）
+                // 但為了保險，我們還是監聽 onload 事件
+                
+                this.el.icon.onload = () => {
+                    // 圖片準備好了，顯示圖片與選項
+                    this.el.iconContainer.classList.add('loaded');
+                    // 稍微延遲一點點選項顯示，製造節奏感，但不會像之前那麼久
+                    setTimeout(() => {
+                        this.el.options.classList.add('visible');
+                    }, 50);
+                };
+
+                // 如果圖片從快取讀取極快，有時 onload 不會觸發，手動檢查 complete
+                if (this.el.icon.complete) {
+                    this.el.icon.onload();
+                }
+                // --------------------------------
+
+                // 產生選項邏輯 (與之前相同)
                 let options = [this.currentAnswer];
                 const sameTypeJobs = fullJobsData.filter(j => j.type === this.currentAnswer.type && j.id !== this.currentAnswer.id);
                 
@@ -383,7 +453,6 @@
                         options.push(randomJob);
                     }
                 }
-
                 options.sort(() => Math.random() - 0.5);
 
                 this.el.options.innerHTML = '';
@@ -403,13 +472,11 @@
                 const isCorrect = selectedJob.id === this.currentAnswer.id;
 
                 if (isCorrect) {
-                    // 答對邏輯
-                    this.score += 10; // 一題10分
+                    this.score += 10;
                     btnElement.classList.add('correct');
-                    this.showFeedback(btnElement); // 顯示情緒價值彈出文字
-                    this.updateStats(); // 立即更新分數
+                    this.showFeedback(btnElement);
+                    this.updateStats();
                 } else {
-                    // 答錯邏輯
                     btnElement.classList.add('wrong');
                     buttons.forEach(b => {
                         if (b.textContent === this.currentAnswer.name) {
@@ -424,14 +491,11 @@
                 }, 1300);
             },
 
-            // 顯示浮動誇獎文字
             showFeedback: function(btn) {
                 const text = praiseWords[Math.floor(Math.random() * praiseWords.length)];
                 const feedbackEl = document.createElement('div');
                 feedbackEl.className = 'feedback-text';
                 feedbackEl.textContent = text;
-                
-                // 將浮動文字加到按鈕裡面
                 btn.appendChild(feedbackEl);
             },
 
@@ -452,6 +516,11 @@
                 else msg = "看來你需要去死者宮殿特訓一下基礎職業了...";
                 this.el.comment.textContent = msg;
             }
+        };
+
+        // 啟動預先載入
+        window.onload = function() {
+            assetLoader.init();
         };
     </script>
 </body>
