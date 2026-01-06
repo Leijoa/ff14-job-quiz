@@ -69,14 +69,16 @@
             margin: 0 auto 30px auto;
             position: relative;
             filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.5));
-            transition: all 0.3s ease;
-            /* 預設隱藏，載入完成後透過 class 顯示 */
-            opacity: 0; 
+            /* 關鍵修改：預設透明，轉場速度加快 */
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.2s ease-out, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* 圖片載入完成後的顯示狀態 */
-        .icon-wrapper.loaded {
+        /* 圖片顯示狀態 */
+        .icon-wrapper.visible {
             opacity: 1;
+            transform: scale(1);
         }
 
         .icon-wrapper img {
@@ -90,13 +92,18 @@
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             position: relative;
-            /* 預設隱藏，等圖片出來才出來 */
+            /* 關鍵修改：預設透明，並稍微往下位移 */
             opacity: 0;
-            transition: opacity 0.2s ease-out;
+            transform: translateY(10px);
+            transition: all 0.3s ease-out;
+            pointer-events: none; /* 隱藏時不可點擊 */
         }
 
+        /* 選項顯示狀態 */
         .options-grid.visible {
             opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
         }
 
         button {
@@ -203,7 +210,6 @@
             transform: translateY(-3px);
         }
 
-        /* 載入狀態按鈕 */
         .big-btn:disabled {
             background: #444;
             color: #888;
@@ -237,7 +243,6 @@
             line-height: 1.6;
         }
 
-        /* 載入進度條 */
         #loading-bar-container {
             width: 100%;
             height: 4px;
@@ -324,12 +329,9 @@
 
         const praiseWords = ["完美！+10", "太強了！+10", "神操作！+10", "NICE！+10", "Exactly！+10", "帥啊！+10", "正確！+10", "好眼力！+10"];
 
-        // --- 資源預先載入邏輯 ---
         const assetLoader = {
             total: fullJobsData.length,
             loaded: 0,
-            images: {}, // 儲存預載好的圖片物件
-
             init: function() {
                 const startBtn = document.getElementById('start-btn');
                 const loadingText = document.getElementById('loading-text');
@@ -346,13 +348,10 @@
                         this.updateProgress(loadingBar, loadingText, startBtn);
                     };
                     img.onerror = () => {
-                        // 即使失敗也算載入完成，避免卡住
                         this.loaded++; 
                         console.warn(`無法載入: ${job.id}`);
                         this.updateProgress(loadingBar, loadingText, startBtn);
                     };
-                    // 快取起來
-                    this.images[job.id] = img;
                 });
             },
 
@@ -413,36 +412,49 @@
                 this.isLocked = false;
                 this.updateStats();
 
-                // 1. 先隱藏圖片和選項，準備轉場
-                this.el.iconContainer.classList.remove('loaded');
+                // --- 步驟 1: 強制清空舞台 (Reset) ---
+                // 先把舊的圖片和選項都隱藏起來
+                this.el.iconContainer.classList.remove('visible');
                 this.el.options.classList.remove('visible');
 
-                // 2. 準備下一題資料
+                // 設定一個短暫的緩衝時間 (200ms)，確保舊的東西完全消失
+                // 這會產生一個短暫的「空白期」，讓轉場更清晰
+                setTimeout(() => {
+                    this.prepareNewRound();
+                }, 200);
+            },
+
+            prepareNewRound: function() {
+                // --- 步驟 2: 準備新資料 ---
                 this.currentAnswer = fullJobsData[Math.floor(Math.random() * fullJobsData.length)];
                 
-                // 3. 設定圖片路徑
+                // 準備選項 (這時候還是隱藏的)
+                this.generateOptions();
+
+                // --- 步驟 3: 載入圖片 ---
+                // 設定圖片路徑，這時瀏覽器會從快取抓圖
                 this.el.icon.src = `icons/${this.currentAnswer.id}.png`;
 
-                // --- 關鍵優化：圖片載入完成偵測 ---
-                // 因為我們已經預載過，這裡通常會是瞬間完成（從快取讀）
-                // 但為了保險，我們還是監聽 onload 事件
-                
+                // --- 步驟 4: 圖片先行 (Icon First) ---
                 this.el.icon.onload = () => {
-                    // 圖片準備好了，顯示圖片與選項
-                    this.el.iconContainer.classList.add('loaded');
-                    // 稍微延遲一點點選項顯示，製造節奏感，但不會像之前那麼久
+                    // 圖片好了，先顯示圖片
+                    this.el.iconContainer.classList.add('visible');
+                    
+                    // --- 步驟 5: 選項後出 (Options Later) ---
+                    // 延遲 150ms 後，才彈出選項
+                    // 這就是你要的「先讓圖示出來，再跳選項出來」
                     setTimeout(() => {
                         this.el.options.classList.add('visible');
-                    }, 50);
+                    }, 150);
                 };
 
-                // 如果圖片從快取讀取極快，有時 onload 不會觸發，手動檢查 complete
+                // 保險機制：如果圖片已經在快取中(通常是)，手動觸發 onload
                 if (this.el.icon.complete) {
                     this.el.icon.onload();
                 }
-                // --------------------------------
+            },
 
-                // 產生選項邏輯 (與之前相同)
+            generateOptions: function() {
                 let options = [this.currentAnswer];
                 const sameTypeJobs = fullJobsData.filter(j => j.type === this.currentAnswer.type && j.id !== this.currentAnswer.id);
                 
@@ -486,6 +498,7 @@
                     });
                 }
 
+                // 答題後的轉場時間
                 setTimeout(() => {
                     this.nextRound();
                 }, 1300);
@@ -518,7 +531,6 @@
             }
         };
 
-        // 啟動預先載入
         window.onload = function() {
             assetLoader.init();
         };
