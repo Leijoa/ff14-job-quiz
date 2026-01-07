@@ -69,13 +69,11 @@
             margin: 0 auto 30px auto;
             position: relative;
             filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.5));
-            /* 關鍵修改：預設透明，轉場速度加快 */
             opacity: 0;
             transform: scale(0.9);
             transition: opacity 0.2s ease-out, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* 圖片顯示狀態 */
         .icon-wrapper.visible {
             opacity: 1;
             transform: scale(1);
@@ -92,14 +90,12 @@
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             position: relative;
-            /* 關鍵修改：預設透明，並稍微往下位移 */
             opacity: 0;
             transform: translateY(10px);
             transition: all 0.3s ease-out;
-            pointer-events: none; /* 隱藏時不可點擊 */
+            pointer-events: none;
         }
 
-        /* 選項顯示狀態 */
         .options-grid.visible {
             opacity: 1;
             transform: translateY(0);
@@ -379,6 +375,8 @@
             totalRounds: 10,
             currentAnswer: null,
             isLocked: false,
+            // 新增: 用來存放大洗牌後的題目池
+            questionPool: [],
 
             el: {
                 start: document.getElementById('start-screen'),
@@ -396,6 +394,12 @@
             start: function() {
                 this.round = 0;
                 this.score = 0;
+                
+                // --- 關鍵修改：初始化題目池 ---
+                // 1. 複製一份完整的職業清單
+                // 2. 隨機排序 (洗牌)
+                this.questionPool = [...fullJobsData].sort(() => Math.random() - 0.5);
+                
                 this.el.start.style.display = 'none';
                 this.el.end.style.display = 'none';
                 this.el.game.style.display = 'block';
@@ -412,43 +416,36 @@
                 this.isLocked = false;
                 this.updateStats();
 
-                // --- 步驟 1: 強制清空舞台 (Reset) ---
-                // 先把舊的圖片和選項都隱藏起來
                 this.el.iconContainer.classList.remove('visible');
                 this.el.options.classList.remove('visible');
 
-                // 設定一個短暫的緩衝時間 (200ms)，確保舊的東西完全消失
-                // 這會產生一個短暫的「空白期」，讓轉場更清晰
                 setTimeout(() => {
                     this.prepareNewRound();
                 }, 200);
             },
 
             prepareNewRound: function() {
-                // --- 步驟 2: 準備新資料 ---
-                this.currentAnswer = fullJobsData[Math.floor(Math.random() * fullJobsData.length)];
+                // --- 關鍵修改：從題目池取題 ---
+                // 使用 pop() 從洗好的牌堆中取出一張
+                // 這樣保證取出的牌不會再次出現，直到遊戲重置
+                if (this.questionPool.length > 0) {
+                    this.currentAnswer = this.questionPool.pop();
+                } else {
+                    // 理論上玩 10 題不會發生，但做個保險
+                    this.currentAnswer = fullJobsData[Math.floor(Math.random() * fullJobsData.length)];
+                }
                 
-                // 準備選項 (這時候還是隱藏的)
                 this.generateOptions();
 
-                // --- 步驟 3: 載入圖片 ---
-                // 設定圖片路徑，這時瀏覽器會從快取抓圖
                 this.el.icon.src = `icons/${this.currentAnswer.id}.png`;
 
-                // --- 步驟 4: 圖片先行 (Icon First) ---
                 this.el.icon.onload = () => {
-                    // 圖片好了，先顯示圖片
                     this.el.iconContainer.classList.add('visible');
-                    
-                    // --- 步驟 5: 選項後出 (Options Later) ---
-                    // 延遲 150ms 後，才彈出選項
-                    // 這就是你要的「先讓圖示出來，再跳選項出來」
                     setTimeout(() => {
                         this.el.options.classList.add('visible');
                     }, 150);
                 };
 
-                // 保險機制：如果圖片已經在快取中(通常是)，手動觸發 onload
                 if (this.el.icon.complete) {
                     this.el.icon.onload();
                 }
@@ -456,11 +453,13 @@
 
             generateOptions: function() {
                 let options = [this.currentAnswer];
+                // 選項依然是從完整的資料庫 (fullJobsData) 裡抓，這樣才有混淆效果
                 const sameTypeJobs = fullJobsData.filter(j => j.type === this.currentAnswer.type && j.id !== this.currentAnswer.id);
                 
                 while (options.length < 4) {
                     let pool = (options.length < 3 && sameTypeJobs.length > 0) ? sameTypeJobs : fullJobsData;
                     let randomJob = pool[Math.floor(Math.random() * pool.length)];
+                    // 確保選項不重複
                     if (!options.find(o => o.id === randomJob.id)) {
                         options.push(randomJob);
                     }
@@ -498,7 +497,6 @@
                     });
                 }
 
-                // 答題後的轉場時間
                 setTimeout(() => {
                     this.nextRound();
                 }, 1300);
@@ -537,3 +535,5 @@
     </script>
 </body>
 </html>
+
+
