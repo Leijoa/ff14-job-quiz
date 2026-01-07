@@ -1,0 +1,634 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF14 全職業圖示大會考 (零式版) | 雷爪獅遊戲頻道</title>
+    <style>
+        :root {
+            --bg-color-start: #2d2d2d;
+            --bg-color-end: #121212;
+            --card-bg: rgba(30, 30, 30, 0.95);
+            --text-color: #e0e0e0;
+            --accent-color: #d4af37; /* 艾歐澤亞金 */
+            --savage-color: #b71c1c; /* 零式紅 */
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --btn-bg: #333333;
+            --btn-hover: #444444;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Heiti TC', sans-serif;
+            background: radial-gradient(circle at center, var(--bg-color-start) 0%, var(--bg-color-end) 100%);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            background: var(--card-bg);
+            padding: 30px 20px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            border: 1px solid #444;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.5s ease-out;
+            position: relative;
+        }
+
+        /* 零式模式下的邊框特效 */
+        .container.savage-mode {
+            border: 1px solid var(--savage-color);
+            box-shadow: 0 0 20px rgba(183, 28, 28, 0.4);
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .savage-title {
+            color: var(--savage-color) !important;
+            text-shadow: 0 0 10px rgba(183, 28, 28, 0.8);
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+
+        #game-area, #end-screen { display: none; }
+        #start-screen { display: block; }
+
+        .icon-wrapper {
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 30px auto;
+            position: relative;
+            filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.5));
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.2s ease-out, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .icon-wrapper.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* --- 零式難度特效 CSS --- */
+        
+        /* 1. 失去色彩 (黑白) */
+        .icon-wrapper.savage-gray {
+            filter: grayscale(100%) brightness(0.9) drop-shadow(0 0 5px rgba(255,255,255,0.2));
+        }
+
+        /* 2. 隨機旋轉 */
+        .icon-wrapper.rotate-90 { transform: rotate(90deg) scale(1) !important; }
+        .icon-wrapper.rotate-180 { transform: rotate(180deg) scale(1) !important; }
+        .icon-wrapper.rotate-270 { transform: rotate(-90deg) scale(1) !important; }
+
+        /* ----------------------- */
+
+        .icon-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            position: relative;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease-out;
+            pointer-events: none;
+        }
+
+        .options-grid.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        button {
+            background: var(--btn-bg);
+            color: var(--text-color);
+            border: 1px solid #555;
+            padding: 15px 5px;
+            font-size: 1.05rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            font-family: inherit;
+            touch-action: manipulation;
+            position: relative;
+            overflow: visible;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            background: var(--btn-hover);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button.correct {
+            background-color: var(--correct) !important;
+            border-color: #66bb6a !important;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.8) !important;
+            animation: pulse-green 0.4s;
+            z-index: 10;
+        }
+
+        button.wrong {
+            background-color: var(--wrong) !important;
+            border-color: #ef5350 !important;
+            color: white;
+            box-shadow: 0 0 15px rgba(244, 67, 54, 0.5) !important;
+            animation: shake 0.5s;
+        }
+
+        .feedback-text {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffd700;
+            font-weight: 900;
+            font-size: 1.4rem;
+            white-space: nowrap;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255, 215, 0, 0.5);
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 20;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 0; transform: translate(-50%, 10px) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -20px) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -60px) scale(1.5); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse-green {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); background-color: #43a047; }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); background-color: #d32f2f; }
+            20%, 40%, 60%, 80% { transform: translateX(6px); }
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .big-btn {
+            background: linear-gradient(to bottom, #d4af37, #b4932a);
+            color: #1a1a1a;
+            font-weight: bold;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .big-btn:hover {
+            background: linear-gradient(to bottom, #eac752, #c4a33a);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.5);
+            transform: translateY(-3px);
+        }
+
+        /* 零式按鈕 */
+        .savage-btn {
+            background: linear-gradient(to bottom, #c62828, #8e0000);
+            color: white;
+            box-shadow: 0 5px 15px rgba(198, 40, 40, 0.4);
+        }
+
+        .savage-btn:hover {
+            background: linear-gradient(to bottom, #e53935, #b71c1c);
+            box-shadow: 0 8px 20px rgba(198, 40, 40, 0.6);
+        }
+
+        .big-btn:disabled {
+            background: #444 !important;
+            color: #888 !important;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            font-size: 1rem;
+            color: #bbb;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 1px solid #333;
+        }
+
+        .score-highlight {
+            color: var(--accent-color);
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .footer {
+            margin-top: 35px;
+            font-size: 0.75rem;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        #loading-bar-container {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            margin-top: 10px;
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+        #loading-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--accent-color);
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="main-container">
+        <div id="start-screen">
+            <h1 id="title-text">FF14 全職業圖示特訓</h1>
+            <p class="subtitle">戰鬥．採集．生產．基礎職業</p>
+            <div style="margin: 30px 0; font-size: 1rem; color: #ccc; line-height: 1.8;">
+                <p>嫌普通難度太簡單？</p>
+                <p>來試試看你的肌肉記憶是否可靠。</p>
+                
+                <p id="loading-text" style="font-size: 0.9rem; color: #888; margin-top: 10px;">
+                    正在讀取職業水晶...
+                </p>
+                <div id="loading-bar-container">
+                    <div id="loading-bar"></div>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button id="start-normal-btn" class="big-btn" onclick="game.start('normal')" disabled>一般副本 (Normal)</button>
+                <button id="start-savage-btn" class="big-btn savage-btn" onclick="game.start('hard')" disabled>零式挑戰 (Savage)</button>
+            </div>
+        </div>
+
+        <div id="game-area">
+            <div class="status-bar">
+                <span id="progress">題數: 1/10</span>
+                <span id="score" class="score-highlight">得分: 0</span>
+            </div>
+            
+            <div class="icon-wrapper" id="icon-container">
+                <img id="question-icon" src="" alt="Job Icon">
+            </div>
+
+            <div class="options-grid" id="options-container">
+                </div>
+        </div>
+
+        <div id="end-screen">
+            <h1 id="end-title">挑戰結束</h1>
+            <h2 id="final-score" style="font-size: 3.5rem; margin: 25px 0; color: var(--accent-color); text-shadow: 0 0 20px rgba(212, 175, 55, 0.6);">0 / 100</h2>
+            <p id="comment" style="font-size: 1.2rem; margin-bottom: 35px; color: #e0e0e0;">載入評語...</p>
+            <button class="big-btn" onclick="game.backToMenu()">返回主選單</button>
+        </div>
+
+        <div class="footer">
+            <p>Designed for LeijoaLion (雷爪獅)</p>
+            <p>© SQUARE ENIX CO., LTD. All Rights Reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        const fullJobsData = [
+            // --- 坦克 Tank ---
+            { id: 'PLD', name: '騎士', type: 'tank' }, { id: 'WAR', name: '戰士', type: 'tank' }, { id: 'DRK', name: '暗黑騎士', type: 'tank' }, { id: 'GNB', name: '絕槍戰士', type: 'tank' },
+            // --- 補師 Healer ---
+            { id: 'WHM', name: '白魔道士', type: 'healer' }, { id: 'SCH', name: '學者', type: 'healer' }, { id: 'AST', name: '占星術士', type: 'healer' }, { id: 'SGE', name: '賢者', type: 'healer' },
+            // --- 近戰 Melee ---
+            { id: 'MNK', name: '武僧', type: 'dps' }, { id: 'DRG', name: '龍騎士', type: 'dps' }, { id: 'NIN', name: '忍者', type: 'dps' }, { id: 'SAM', name: '武士', type: 'dps' }, { id: 'RPR', name: '奪魂者', type: 'dps' }, { id: 'VPR', name: '毒蛇劍士', type: 'dps' },
+            // --- 遠程物理 Phys Ranged ---
+            { id: 'BRD', name: '吟遊詩人', type: 'dps' }, { id: 'MCH', name: '機工士', type: 'dps' }, { id: 'DNC', name: '舞者', type: 'dps' },
+            // --- 遠程魔法 Magic Ranged ---
+            { id: 'BLM', name: '黑魔道士', type: 'dps' }, { id: 'SMN', name: '召喚師', type: 'dps' }, { id: 'RDM', name: '赤魔道士', type: 'dps' }, { id: 'PCT', name: '繪靈法師', type: 'dps' }, { id: 'BLU', name: '青魔道士', type: 'dps' },
+            // --- 基礎職業 Base Classes ---
+            { id: 'GLA', name: '劍術師', type: 'base' }, { id: 'MRD', name: '斧術師', type: 'base' }, { id: 'PGL', name: '格鬥家', type: 'base' }, { id: 'LNC', name: '槍術師', type: 'base' }, { id: 'ROG', name: '雙劍師', type: 'base' }, { id: 'ARC', name: '弓箭手', type: 'base' }, { id: 'THM', name: '咒術師', type: 'base' }, { id: 'ACN', name: '巴術師', type: 'base' }, { id: 'CNJ', name: '幻術師', type: 'base' },
+            // --- 能工巧匠 Crafters (DoH) ---
+            { id: 'CRP', name: '木工師', type: 'doh' }, { id: 'BSM', name: '鍛造師', type: 'doh' }, { id: 'ARM', name: '甲冑師', type: 'doh' }, { id: 'GSM', name: '金工師', type: 'doh' }, { id: 'LTW', name: '皮革師', type: 'doh' }, { id: 'WVR', name: '裁縫師', type: 'doh' }, { id: 'ALC', name: '鍊金術師', type: 'doh' }, { id: 'CUL', name: '烹調師', type: 'doh' },
+            // --- 大地使者 Gatherers (DoL) ---
+            { id: 'MIN', name: '採掘師', type: 'dol' }, { id: 'BTN', name: '園藝師', type: 'dol' }, { id: 'FSH', name: '漁師', type: 'dol' }
+        ];
+
+        const praiseWords = ["完美！+10", "太強了！+10", "神操作！+10", "NICE！+10", "Exactly！+10", "帥啊！+10", "正確！+10", "好眼力！+10"];
+        
+        // 零式專用詞
+        const savagePraise = ["機制完美！+10", "絕槍沒開盾？+10", "貪得漂亮！+10", "完美的爆發！+10", "躲過機制！+10"];
+
+        const assetLoader = {
+            total: fullJobsData.length,
+            loaded: 0,
+            init: function() {
+                const startNormalBtn = document.getElementById('start-normal-btn');
+                const startSavageBtn = document.getElementById('start-savage-btn');
+                const loadingText = document.getElementById('loading-text');
+                const loadingBar = document.getElementById('loading-bar');
+                const loadingContainer = document.getElementById('loading-bar-container');
+
+                loadingContainer.style.display = 'block';
+
+                fullJobsData.forEach(job => {
+                    const img = new Image();
+                    img.src = `icons/${job.id}.png`;
+                    img.onload = () => {
+                        this.loaded++;
+                        this.updateProgress(loadingBar, loadingText, startNormalBtn, startSavageBtn);
+                    };
+                    img.onerror = () => {
+                        this.loaded++; 
+                        console.warn(`無法載入: ${job.id}`);
+                        this.updateProgress(loadingBar, loadingText, startNormalBtn, startSavageBtn);
+                    };
+                });
+            },
+
+            updateProgress: function(bar, text, btn1, btn2) {
+                const percent = Math.floor((this.loaded / this.total) * 100);
+                bar.style.width = `${percent}%`;
+                
+                if (this.loaded >= this.total) {
+                    text.textContent = "準備完成！";
+                    text.style.color = "#4caf50";
+                    btn1.disabled = false;
+                    btn2.disabled = false;
+                    setTimeout(() => {
+                        document.getElementById('loading-bar-container').style.display = 'none';
+                    }, 500);
+                } else {
+                    text.textContent = `正在擦亮靈魂水晶... ${percent}%`;
+                }
+            }
+        };
+
+        const game = {
+            round: 0,
+            score: 0,
+            totalRounds: 10,
+            currentAnswer: null,
+            isLocked: false,
+            questionPool: [],
+            mode: 'normal', // 'normal' or 'hard'
+
+            el: {
+                container: document.getElementById('main-container'),
+                title: document.getElementById('title-text'),
+                start: document.getElementById('start-screen'),
+                game: document.getElementById('game-area'),
+                end: document.getElementById('end-screen'),
+                icon: document.getElementById('question-icon'),
+                iconContainer: document.getElementById('icon-container'),
+                options: document.getElementById('options-container'),
+                progress: document.getElementById('progress'),
+                score: document.getElementById('score'),
+                finalScore: document.getElementById('final-score'),
+                comment: document.getElementById('comment')
+            },
+
+            start: function(selectedMode) {
+                this.round = 0;
+                this.score = 0;
+                this.mode = selectedMode;
+                this.questionPool = [...fullJobsData].sort(() => Math.random() - 0.5);
+                
+                // UI 狀態設定
+                this.el.start.style.display = 'none';
+                this.el.end.style.display = 'none';
+                this.el.game.style.display = 'block';
+
+                if (this.mode === 'hard') {
+                    this.el.container.classList.add('savage-mode');
+                    this.el.title.classList.add('savage-title');
+                    this.el.title.textContent = "FF14 零式圖示挑戰";
+                } else {
+                    this.el.container.classList.remove('savage-mode');
+                    this.el.title.classList.remove('savage-title');
+                    this.el.title.textContent = "FF14 全職業圖示特訓";
+                }
+
+                this.nextRound();
+            },
+
+            backToMenu: function() {
+                this.el.game.style.display = 'none';
+                this.el.end.style.display = 'none';
+                this.el.start.style.display = 'block';
+                // 重置視覺
+                this.el.container.classList.remove('savage-mode');
+                this.el.title.classList.remove('savage-title');
+                this.el.title.textContent = "FF14 全職業圖示特訓";
+            },
+
+            nextRound: function() {
+                if (this.round >= this.totalRounds) {
+                    this.finish();
+                    return;
+                }
+
+                this.round++;
+                this.isLocked = false;
+                this.updateStats();
+
+                this.el.iconContainer.classList.remove('visible');
+                this.el.options.classList.remove('visible');
+
+                // 清除零式特效
+                this.el.iconContainer.className = 'icon-wrapper'; 
+
+                setTimeout(() => {
+                    this.prepareNewRound();
+                }, 200);
+            },
+
+            prepareNewRound: function() {
+                if (this.questionPool.length > 0) {
+                    this.currentAnswer = this.questionPool.pop();
+                } else {
+                    this.currentAnswer = fullJobsData[Math.floor(Math.random() * fullJobsData.length)];
+                }
+                
+                this.generateOptions();
+                this.el.icon.src = `icons/${this.currentAnswer.id}.png`;
+
+                // --- 零式機制處理 ---
+                if (this.mode === 'hard') {
+                    // 機制 1: 變灰
+                    this.el.iconContainer.classList.add('savage-gray');
+                    
+                    // 機制 2: 隨機旋轉
+                    const rotationChance = Math.random();
+                    if (rotationChance > 0.7) {
+                        this.el.iconContainer.classList.add('rotate-180');
+                    } else if (rotationChance > 0.5) {
+                        this.el.iconContainer.classList.add('rotate-90');
+                    } else if (rotationChance > 0.3) {
+                        this.el.iconContainer.classList.add('rotate-270');
+                    }
+                    // 30% 機率不轉，騙你一下
+                }
+
+                this.el.icon.onload = () => {
+                    this.el.iconContainer.classList.add('visible');
+                    setTimeout(() => {
+                        this.el.options.classList.add('visible');
+                    }, 150);
+                };
+
+                if (this.el.icon.complete) {
+                    this.el.icon.onload();
+                }
+            },
+
+            generateOptions: function() {
+                let options = [this.currentAnswer];
+                const sameTypeJobs = fullJobsData.filter(j => j.type === this.currentAnswer.type && j.id !== this.currentAnswer.id);
+                
+                while (options.length < 4) {
+                    let pool = (options.length < 3 && sameTypeJobs.length > 0) ? sameTypeJobs : fullJobsData;
+                    let randomJob = pool[Math.floor(Math.random() * pool.length)];
+                    if (!options.find(o => o.id === randomJob.id)) {
+                        options.push(randomJob);
+                    }
+                }
+                options.sort(() => Math.random() - 0.5);
+
+                this.el.options.innerHTML = '';
+                options.forEach(job => {
+                    const btn = document.createElement('button');
+                    btn.textContent = job.name;
+                    btn.onclick = (e) => this.check(job, e.target);
+                    this.el.options.appendChild(btn);
+                });
+            },
+
+            check: function(selectedJob, btnElement) {
+                if (this.isLocked) return;
+                this.isLocked = true;
+
+                const buttons = this.el.options.querySelectorAll('button');
+                const isCorrect = selectedJob.id === this.currentAnswer.id;
+
+                if (isCorrect) {
+                    this.score += 10;
+                    btnElement.classList.add('correct');
+                    this.showFeedback(btnElement);
+                    this.updateStats();
+                } else {
+                    btnElement.classList.add('wrong');
+                    buttons.forEach(b => {
+                        if (b.textContent === this.currentAnswer.name) {
+                            b.classList.add('correct');
+                            b.style.animation = 'none';
+                        }
+                    });
+                }
+
+                setTimeout(() => {
+                    this.nextRound();
+                }, 1300);
+            },
+
+            showFeedback: function(btn) {
+                // 根據模式選擇誇獎詞
+                const words = this.mode === 'hard' ? savagePraise : praiseWords;
+                const text = words[Math.floor(Math.random() * words.length)];
+                
+                const feedbackEl = document.createElement('div');
+                feedbackEl.className = 'feedback-text';
+                feedbackEl.textContent = text;
+                btn.appendChild(feedbackEl);
+            },
+
+            updateStats: function() {
+                this.el.progress.textContent = `題數: ${this.round}/${this.totalRounds}`;
+                this.el.score.textContent = `得分: ${this.score}`;
+            },
+
+            finish: function() {
+                this.el.game.style.display = 'none';
+                this.el.end.style.display = 'block';
+                this.el.finalScore.textContent = `${this.score} / 100`;
+                
+                let msg = "";
+                // 零式模式的特殊評語
+                if (this.mode === 'hard') {
+                    if (this.score === 100) msg = "【傳說】你就是艾歐澤亞的圖示辨識之神！";
+                    else if (this.score >= 80) msg = "【英雄】機制處理得非常完美，DPS合格！";
+                    else if (this.score >= 50) msg = "【一般】黑白的確很難認，請再接再厲！";
+                    else msg = "【失敗】機制沒看懂？請回去重讀攻略！";
+                } else {
+                    if (this.score === 100) msg = "太神啦！100分！去挑戰零式難度吧！";
+                    else if (this.score >= 80) msg = "非常優秀！艾歐澤亞的百科全書就是你。";
+                    else if (this.score >= 50) msg = "還不錯，但小心別把木工師認成鍛造師喔！";
+                    else msg = "看來你需要去死者宮殿特訓一下基礎職業了...";
+                }
+                this.el.comment.textContent = msg;
+            }
+        };
+
+        window.onload = function() {
+            assetLoader.init();
+        };
+    </script>
+</body>
+</html>
