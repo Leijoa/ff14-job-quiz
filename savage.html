@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FF14 全職業圖示大會考 (零式版) | 雷爪獅遊戲頻道</title>
+    <title>FF14 職業圖示大會考 (絕境版) | 雷爪獅遊戲頻道</title>
     <style>
         :root {
             --bg-color-start: #2d2d2d;
@@ -11,7 +11,7 @@
             --card-bg: rgba(30, 30, 30, 0.95);
             --text-color: #e0e0e0;
             --accent-color: #d4af37; /* 艾歐澤亞金 */
-            --savage-color: #b71c1c; /* 零式紅 */
+            --savage-color: #9c27b0; /* 絕境紫 */
             --correct: #4caf50;
             --wrong: #f44336;
             --btn-bg: #333333;
@@ -47,10 +47,10 @@
             position: relative;
         }
 
-        /* 零式模式下的邊框特效 */
+        /* 絕境模式特效 */
         .container.savage-mode {
             border: 1px solid var(--savage-color);
-            box-shadow: 0 0 20px rgba(183, 28, 28, 0.4);
+            box-shadow: 0 0 25px rgba(156, 39, 176, 0.4);
         }
 
         h1 {
@@ -63,7 +63,8 @@
 
         .savage-title {
             color: var(--savage-color) !important;
-            text-shadow: 0 0 10px rgba(183, 28, 28, 0.8);
+            text-shadow: 0 0 15px rgba(156, 39, 176, 0.8);
+            letter-spacing: 2px;
         }
 
         .subtitle {
@@ -91,19 +92,14 @@
             transform: scale(1);
         }
 
-        /* --- 零式難度特效 CSS --- */
-        
-        /* 1. 失去色彩 (黑白) */
+        /* 絕境視覺干擾 */
         .icon-wrapper.savage-gray {
-            filter: grayscale(100%) brightness(0.9) drop-shadow(0 0 5px rgba(255,255,255,0.2));
+            filter: grayscale(100%) brightness(0.9) contrast(1.2) drop-shadow(0 0 8px rgba(255,255,255,0.1));
         }
 
-        /* 2. 隨機旋轉 */
         .icon-wrapper.rotate-90 { transform: rotate(90deg) scale(1) !important; }
         .icon-wrapper.rotate-180 { transform: rotate(180deg) scale(1) !important; }
         .icon-wrapper.rotate-270 { transform: rotate(-90deg) scale(1) !important; }
-
-        /* ----------------------- */
 
         .icon-wrapper img {
             width: 100%;
@@ -113,13 +109,19 @@
 
         .options-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr; /* 預設一般模式兩欄 */
             gap: 15px;
             position: relative;
             opacity: 0;
             transform: translateY(10px);
             transition: all 0.3s ease-out;
             pointer-events: none;
+        }
+
+        /* 絕境模式改為單欄垂直排列 (三選一) */
+        .options-grid.savage-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
         }
 
         .options-grid.visible {
@@ -175,7 +177,7 @@
 
         .feedback-text {
             position: absolute;
-            top: -20px;
+            top: -25px; /* 稍微再高一點 */
             left: 50%;
             transform: translateX(-50%);
             color: #ffd700;
@@ -238,16 +240,16 @@
             transform: translateY(-3px);
         }
 
-        /* 零式按鈕 */
+        /* 絕境按鈕 */
         .savage-btn {
-            background: linear-gradient(to bottom, #c62828, #8e0000);
+            background: linear-gradient(to bottom, #7b1fa2, #4a0072);
             color: white;
-            box-shadow: 0 5px 15px rgba(198, 40, 40, 0.4);
+            box-shadow: 0 5px 15px rgba(123, 31, 162, 0.4);
         }
 
         .savage-btn:hover {
-            background: linear-gradient(to bottom, #e53935, #b71c1c);
-            box-shadow: 0 8px 20px rgba(198, 40, 40, 0.6);
+            background: linear-gradient(to bottom, #9c27b0, #6a0080);
+            box-shadow: 0 8px 20px rgba(123, 31, 162, 0.6);
         }
 
         .big-btn:disabled {
@@ -307,8 +309,8 @@
             <h1 id="title-text">FF14 全職業圖示特訓</h1>
             <p class="subtitle">戰鬥．採集．生產．基礎職業</p>
             <div style="margin: 30px 0; font-size: 1rem; color: #ccc; line-height: 1.8;">
-                <p>嫌普通難度太簡單？</p>
-                <p>來試試看你的肌肉記憶是否可靠。</p>
+                <p>簡單到想睡覺？</p>
+                <p>【絕境模式】等你來挑戰。</p>
                 
                 <p id="loading-text" style="font-size: 0.9rem; color: #888; margin-top: 10px;">
                     正在讀取職業水晶...
@@ -320,7 +322,7 @@
             
             <div class="btn-group">
                 <button id="start-normal-btn" class="big-btn" onclick="game.start('normal')" disabled>一般副本 (Normal)</button>
-                <button id="start-savage-btn" class="big-btn savage-btn" onclick="game.start('hard')" disabled>零式挑戰 (Savage)</button>
+                <button id="start-savage-btn" class="big-btn savage-btn" onclick="game.start('hard')" disabled>絕境挑戰 (Ultimate)</button>
             </div>
         </div>
 
@@ -371,10 +373,68 @@
             { id: 'MIN', name: '採掘師', type: 'dol' }, { id: 'BTN', name: '園藝師', type: 'dol' }, { id: 'FSH', name: '漁師', type: 'dol' }
         ];
 
+        // 惡意混淆地圖：定義誰是誰的雙胞胎
+        const confusingMap = {
+            // 劍與長刀類
+            'PLD': ['GLA', 'DRK', 'GNB', 'SAM'],
+            'GLA': ['PLD', 'DRK', 'GNB', 'SAM'],
+            'DRK': ['PLD', 'GLA', 'RPR', 'GNB'],
+            'GNB': ['MCH', 'PLD', 'DRK', 'SAM'], // 槍刃混槍也混劍
+            'SAM': ['PLD', 'DRK', 'NIN', 'VPR'],
+            'VPR': ['NIN', 'ROG', 'SAM', 'DNC'],
+
+            // 斧頭、錘子與重工具
+            'WAR': ['MRD', 'BSM', 'ARM', 'MIN', 'BTN'],
+            'MRD': ['WAR', 'BSM', 'ARM', 'MIN', 'BTN'],
+            'BSM': ['ARM', 'WAR', 'MRD', 'GSM', 'MIN'],
+            'ARM': ['BSM', 'WAR', 'MRD', 'GSM', 'MIN'],
+            'MIN': ['BTN', 'WAR', 'MRD', 'BSM'], // 十字鎬 vs 斧頭
+            'BTN': ['MIN', 'WAR', 'MRD', 'CRP'], // 手斧
+
+            // 書本三兄弟 (地獄級)
+            'SCH': ['SMN', 'ACN'],
+            'SMN': ['SCH', 'ACN'],
+            'ACN': ['SCH', 'SMN'],
+
+            // 法杖與棍棒
+            'WHM': ['CNJ', 'BLM', 'THM', 'BLU', 'PCT'],
+            'CNJ': ['WHM', 'BLM', 'THM', 'BLU', 'PCT'],
+            'BLM': ['THM', 'WHM', 'CNJ', 'BLU', 'PCT'],
+            'THM': ['BLM', 'WHM', 'CNJ', 'BLU', 'PCT'],
+            'BLU': ['WHM', 'BLM', 'PCT', 'RDM'],
+            'PCT': ['WHM', 'BLM', 'BLU', 'RDM'],
+
+            // 長槍與鐮刀
+            'DRG': ['LNC', 'RPR', 'GNB'],
+            'LNC': ['DRG', 'RPR', 'GLA'],
+            'RPR': ['DRG', 'LNC', 'DRK'],
+
+            // 拳套與爪子
+            'MNK': ['PGL', 'NIN', 'ROG'],
+            'PGL': ['MNK', 'NIN', 'ROG'],
+
+            // 雙刀與輕武器
+            'NIN': ['ROG', 'VPR', 'MNK', 'DNC'],
+            'ROG': ['NIN', 'VPR', 'MNK', 'PGL'],
+            'DNC': ['NIN', 'ROG', 'VPR', 'RDM'],
+
+            // 遠程與弓
+            'BRD': ['ARC', 'MCH', 'DNC'],
+            'ARC': ['BRD', 'MCH', 'DNC'],
+            'MCH': ['GNB', 'BRD', 'ARC'],
+
+            // 生產採集大亂鬥
+            'CRP': ['BTN', 'GSM', 'LTW'],
+            'GSM': ['BSM', 'ARM', 'CRP'],
+            'LTW': ['CRP', 'WVR', 'ALC'],
+            'WVR': ['LTW', 'ALC', 'CUL'],
+            'ALC': ['CUL', 'WVR', 'LTW'],
+            'CUL': ['ALC', 'WVR', 'LTW'],
+            'FSH': ['ARC', 'BRD', 'BTN'] // 釣竿很像弓
+        };
+
         const praiseWords = ["完美！+10", "太強了！+10", "神操作！+10", "NICE！+10", "Exactly！+10", "帥啊！+10", "正確！+10", "好眼力！+10"];
-        
-        // 零式專用詞
-        const savagePraise = ["機制完美！+10", "絕槍沒開盾？+10", "貪得漂亮！+10", "完美的爆發！+10", "躲過機制！+10"];
+        const savagePraise = ["機制完美！+10", "絕槍沒開盾？+10", "貪得漂亮！+10", "完美的爆發！+10", "躲過機制！+10", "太絕了！+10"];
 
         const assetLoader = {
             total: fullJobsData.length,
@@ -428,7 +488,7 @@
             currentAnswer: null,
             isLocked: false,
             questionPool: [],
-            mode: 'normal', // 'normal' or 'hard'
+            mode: 'normal', 
 
             el: {
                 container: document.getElementById('main-container'),
@@ -451,7 +511,6 @@
                 this.mode = selectedMode;
                 this.questionPool = [...fullJobsData].sort(() => Math.random() - 0.5);
                 
-                // UI 狀態設定
                 this.el.start.style.display = 'none';
                 this.el.end.style.display = 'none';
                 this.el.game.style.display = 'block';
@@ -459,11 +518,13 @@
                 if (this.mode === 'hard') {
                     this.el.container.classList.add('savage-mode');
                     this.el.title.classList.add('savage-title');
-                    this.el.title.textContent = "FF14 零式圖示挑戰";
+                    this.el.title.textContent = "FF14 絕境圖示挑戰";
+                    this.el.options.classList.add('savage-grid'); // 切換為單欄佈局
                 } else {
                     this.el.container.classList.remove('savage-mode');
                     this.el.title.classList.remove('savage-title');
                     this.el.title.textContent = "FF14 全職業圖示特訓";
+                    this.el.options.classList.remove('savage-grid'); // 恢復雙欄
                 }
 
                 this.nextRound();
@@ -473,7 +534,6 @@
                 this.el.game.style.display = 'none';
                 this.el.end.style.display = 'none';
                 this.el.start.style.display = 'block';
-                // 重置視覺
                 this.el.container.classList.remove('savage-mode');
                 this.el.title.classList.remove('savage-title');
                 this.el.title.textContent = "FF14 全職業圖示特訓";
@@ -492,7 +552,7 @@
                 this.el.iconContainer.classList.remove('visible');
                 this.el.options.classList.remove('visible');
 
-                // 清除零式特效
+                // 清除所有絕境特效
                 this.el.iconContainer.className = 'icon-wrapper'; 
 
                 setTimeout(() => {
@@ -510,12 +570,9 @@
                 this.generateOptions();
                 this.el.icon.src = `icons/${this.currentAnswer.id}.png`;
 
-                // --- 零式機制處理 ---
                 if (this.mode === 'hard') {
-                    // 機制 1: 變灰
                     this.el.iconContainer.classList.add('savage-gray');
                     
-                    // 機制 2: 隨機旋轉
                     const rotationChance = Math.random();
                     if (rotationChance > 0.7) {
                         this.el.iconContainer.classList.add('rotate-180');
@@ -524,7 +581,6 @@
                     } else if (rotationChance > 0.3) {
                         this.el.iconContainer.classList.add('rotate-270');
                     }
-                    // 30% 機率不轉，騙你一下
                 }
 
                 this.el.icon.onload = () => {
@@ -541,15 +597,39 @@
 
             generateOptions: function() {
                 let options = [this.currentAnswer];
+                
+                // --- 絕境模式：惡意混淆邏輯 ---
+                if (this.mode === 'hard') {
+                    // 1. 嘗試從混淆地圖中找
+                    if (confusingMap[this.currentAnswer.id]) {
+                        // 取得這職業的「雙胞胎」清單
+                        let candidates = confusingMap[this.currentAnswer.id];
+                        // 隨機打亂候選人
+                        candidates = candidates.sort(() => Math.random() - 0.5);
+                        
+                        // 嘗試抓取 2 個混淆項 (因為總共 3 個選項)
+                        for (let id of candidates) {
+                            if (options.length >= 3) break;
+                            const jobObj = fullJobsData.find(j => j.id === id);
+                            if (jobObj) options.push(jobObj);
+                        }
+                    }
+                }
+
+                // 2. 如果沒滿 (一般模式或混淆項不夠)，用舊邏輯補滿
+                // 一般模式補到4個，絕境模式補到3個
+                const targetCount = (this.mode === 'hard') ? 3 : 4;
+
                 const sameTypeJobs = fullJobsData.filter(j => j.type === this.currentAnswer.type && j.id !== this.currentAnswer.id);
                 
-                while (options.length < 4) {
-                    let pool = (options.length < 3 && sameTypeJobs.length > 0) ? sameTypeJobs : fullJobsData;
+                while (options.length < targetCount) {
+                    let pool = (options.length < targetCount - 1 && sameTypeJobs.length > 0) ? sameTypeJobs : fullJobsData;
                     let randomJob = pool[Math.floor(Math.random() * pool.length)];
                     if (!options.find(o => o.id === randomJob.id)) {
                         options.push(randomJob);
                     }
                 }
+                
                 options.sort(() => Math.random() - 0.5);
 
                 this.el.options.innerHTML = '';
@@ -589,7 +669,6 @@
             },
 
             showFeedback: function(btn) {
-                // 根據模式選擇誇獎詞
                 const words = this.mode === 'hard' ? savagePraise : praiseWords;
                 const text = words[Math.floor(Math.random() * words.length)];
                 
@@ -610,14 +689,13 @@
                 this.el.finalScore.textContent = `${this.score} / 100`;
                 
                 let msg = "";
-                // 零式模式的特殊評語
                 if (this.mode === 'hard') {
                     if (this.score === 100) msg = "【傳說】你就是艾歐澤亞的圖示辨識之神！";
                     else if (this.score >= 80) msg = "【英雄】機制處理得非常完美，DPS合格！";
                     else if (this.score >= 50) msg = "【一般】黑白的確很難認，請再接再厲！";
                     else msg = "【失敗】機制沒看懂？請回去重讀攻略！";
                 } else {
-                    if (this.score === 100) msg = "太神啦！100分！去挑戰零式難度吧！";
+                    if (this.score === 100) msg = "太神啦！100分！去挑戰絕境難度吧！";
                     else if (this.score >= 80) msg = "非常優秀！艾歐澤亞的百科全書就是你。";
                     else if (this.score >= 50) msg = "還不錯，但小心別把木工師認成鍛造師喔！";
                     else msg = "看來你需要去死者宮殿特訓一下基礎職業了...";
